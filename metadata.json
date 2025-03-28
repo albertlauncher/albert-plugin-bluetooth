@@ -5,5 +5,5 @@
     "description[de]": "Bluetooth-Geräte verbinden",
     "license": "MIT",
     "name": "Bluetooth",
-    "url": "https://github.com/albertlauncher/plugins/tree/main/bluetooth",
+    "url": "https://github.com/albertlauncher/albert-plugin-bluetooth",
 }
