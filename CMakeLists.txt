@@ -1,9 +1,9 @@
 if(APPLE)
 
     cmake_minimum_required(VERSION 3.16)
-    find_package(Albert REQUIRED)
+    project(bluetooth VERSION 4.1)
 
-    project(bluetooth VERSION 4.0)
+    find_package(Albert REQUIRED)
 
     albert_plugin(
         LINK PRIVATE "objc" "-framework IOBluetooth"
