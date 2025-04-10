@@ -1,15 +1,50 @@
+cmake_minimum_required(VERSION 3.16)
+project(bluetooth VERSION 5.0)
+
+find_package(Albert REQUIRED)
+
+albert_plugin(
+    SOURCES
+        src/*.h
+        src/*.cpp
+        ${PROJECT_NAME}.qrc
+    INCLUDE PRIVATE
+        src/
+    QT
+        Core
+)
+
 if(APPLE)
 
-    cmake_minimum_required(VERSION 3.16)
-    project(bluetooth VERSION 4.1)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        "-fobjc-arc")
 
-    find_package(Albert REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "objc"
+        "-framework Foundation"
+        "-framework IOBluetooth")
 
-    albert_plugin(
-        LINK PRIVATE "objc" "-framework IOBluetooth"
-        QT Core
-    )
+    file(GLOB PLATFORM_SOURCES
+        src/iobluetooth/*.h
+        src/iobluetooth/*.mm)
 
-    target_compile_options(${PROJECT_NAME} PRIVATE "-fobjc-arc")
+elseif(UNIX)
+
+    find_package(Qt6 REQUIRED COMPONENTS DBus)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::DBus)
+
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
+    set(DBUS_XML src/bluez/bluez.xml)
+    set_source_files_properties(${DBUS_XML} PROPERTIES NO_NAMESPACE ON)
+    qt_add_dbus_interface(DBUS_SRCS ${DBUS_XML} bluez)
+
+    file(GLOB PLATFORM_SOURCES
+        src/bluez/*.h
+        src/bluez/*.cpp
+        ${PROJECT_BINARY_DIR}/bluez.h
+        ${DBUS_XML}
+        ${DBUS_SRCS})
 
 endif()
+
+target_sources(${PROJECT_NAME} PRIVATE ${PLATFORM_SOURCES})
