@@ -1,34 +1,42 @@
 // Copyright (c) 2024-2025 Manuel Schneider
 
 #pragma once
-#include <QCoreApplication>
-#include <QStringList>
-#include <albert/action.h>
-#include <albert/item.h>
+#include <QObject>
 #include <vector>
+#include <memory>
 class BluetoothDevice;
-class BluetoothControllerPrivate;
+class BluetoothControllerPrivateBase;
 
 class BluetoothController : public QObject
 {
     Q_OBJECT
+
 public:
 
     BluetoothController();
     ~BluetoothController();
 
+    const QString &address() const;
+    const QString &name() const;
+
+    void toggle();
     bool poweredOn() const;
-    void setPoweredOn(bool);
 
     std::vector<std::shared_ptr<BluetoothDevice>> devices();
 
+protected:
+
+    void setName(const QString &);
+    void setPoweredOn(bool);
+
 signals:
 
+    void nameChanged(const QString &);
     void poweredOnChanged(bool);
     void devicesChanged();
 
 private:
 
-    std::unique_ptr<BluetoothControllerPrivate> d;
+    std::unique_ptr<BluetoothControllerPrivateBase> d;
 
 };

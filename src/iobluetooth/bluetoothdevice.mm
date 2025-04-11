@@ -2,13 +2,15 @@
 
 #include "bluetoothcontroller.h"
 #include "bluetoothdevice.h"
-#include "bluetoothdevice_p.h"
+#include "bluetoothdeviceprivate.h"
 #include <Foundation/Foundation.h>
+#include <IOBluetooth/IOBluetooth.h>
 #include <QTimer>
 #include <albert/logging.h>
 #include <albert/notification.h>
-using namespace std;
+using enum BluetoothDevice::State;
 using namespace albert;
+using namespace std;
 #if  ! __has_feature(objc_arc)
 #error This file must be compiled with ARC.
 #endif
@@ -22,98 +24,89 @@ using namespace albert;
 @end
 
 
-BluetoothDevice::BluetoothDevice(std::unique_ptr<BluetoothDevicePrivate> &&_d):
+BluetoothDevicePrivate::BluetoothDevicePrivate(BluetoothController &controller,
+                                               IOBluetoothDevice *_device) :
+    BluetoothDevicePrivateBase(controller,
+                               QString::fromNSString(_device.addressString),
+                               QString::fromNSString(_device.name),
+                               _device.isConnected ? BluetoothDevice::State::Connected
+                                                   : BluetoothDevice::State::Disconnected),
+    device(_device),
+    connection_handler(nullptr)  // lazy
+{}
+
+
+BluetoothDevice::BluetoothDevice(std::unique_ptr<BluetoothDevicePrivateBase> &&_d):
     d(::move(_d))
 {
-    d->q = this;
 }
 
 BluetoothDevice::~BluetoothDevice()
 {
-
 }
-
-BluetoothController &BluetoothDevice::controller() { return d->controller; }
-
-const QString &BluetoothDevice::name() const { return d->name; }
-
-BluetoothDevice::State BluetoothDevice::state() const { return d->state; }
 
 std::optional<QString> BluetoothDevice::toggleConnected()
 {
-    using enum BluetoothDevice::State;
+    auto &p = *static_cast<BluetoothDevicePrivate*>(d.get());
 
-    if (d->state == Connecting)
+    if (state() == Connecting)
         return tr("Device is currently connecting.");
 
-    else if (d->state == Disconnecting)
+    else if (state() == Disconnecting)
         return tr("Device is currently disconnecting.");
 
-    else if (d->state == Connected)
+    else if (state() == Connected)
     {
-        d->setStateAndNotify(Disconnecting);
-        if (auto status = [d->device closeConnection];
+        setState(Disconnecting);
+        if (auto status = [p.device closeConnection];
             status == kIOReturnSuccess)
         {
-            d->setStateAndNotify(Disconnected);
-            INFO << QString("Successfully disconnected '%1'.").arg(d->name);
+            setState(Disconnected);
+            INFO << QString("Successfully disconnected '%1'.").arg(d->name_);
         }
         else
         {
-            d->setStateAndNotify(Connected);
-            WARN << QString("Failed disconnecting '%1': Status '%2'").arg(d->name, status);
+            setState(Connected);
+            WARN << QString("Failed disconnecting '%1': Status '%2'").arg(d->name_, status);
         }
     }
 
     else  // Disconnected
     {
-        if (!d->controller.poweredOn())
+        if (!controller().poweredOn())
             powerOnAndConnect();
         else
         {
             // Lazy handler creation
-            if (d->connection_handler == nil)
+            if (p.connection_handler == nil)
             {
                 auto callback = [this](IOReturn status)
                 {
                     if (status == kIOReturnSuccess)
-                    {
-                        INFO << QString("Successfully connected to device: '%1'").arg(d->name);
-                        d->setStateAndNotify(Connected);
-                        auto *n = new Notification(d->name, this->tr("Connected."));
-                        n->send();
-                        QTimer::singleShot(5000, n, [n]{ n->deleteLater(); });
-                    }
+                        connectionCallback({});
                     else
-                    {
-                        WARN << QString("Failed to connect to device: '%1', status: '%2'")
-                                    .arg(d->name).arg(status);
-                        d->setStateAndNotify(Disconnected);
-                        auto *n = new Notification(d->name, BluetoothDevice::tr("Connection failed"));
-                        n->send();
-                        QTimer::singleShot(5000, n, [n]{ n->deleteLater(); });
-                    }
+                        connectionCallback(QString::number(status));
                 };
 
-                d->connection_handler = [[BluetoothConnectionHandler alloc] initWith:callback];
-                [d->device addObserver:d->connection_handler
-                            forKeyPath:@"connected"
-                               options:NSKeyValueObservingOptionNew
-                               context:nil];
+                p.connection_handler = [[BluetoothConnectionHandler alloc] initWith:callback];
+
+                [p.device addObserver:p.connection_handler
+                           forKeyPath:@"connected"
+                              options:NSKeyValueObservingOptionNew
+                              context:nil];
             }
 
-            if (auto status = [d->device openConnection:d->connection_handler
-                                        withPageTimeout:(BluetoothHCIPageTimeout)BluetoothGetSlotsFromSeconds(3)
-                                 authenticationRequired:false];
+            if (auto status = [p.device openConnection:p.connection_handler];
                 status == kIOReturnSuccess)
             {
-                DEBG << QString("Successfully issued CREATE_CONNECTION command for '%1'.").arg(d->name);
-                d->setStateAndNotify(Connecting);
+                DEBG << QString("Successfully issued CREATE_CONNECTION command for '%1'.")
+                            .arg(d->name_);
+                setState(Connecting);
             }
             else
             {
                 WARN << QString("Failed issuing CREATE_CONNECTION command for '%1': Status '%2'")
-                            .arg(d->name, status);
+                            .arg(d->name_, status);
             }
         }
     }

@@ -1,9 +1,9 @@
 // Copyright (c) 2024-2025 Manuel Schneider
 
 #pragma once
-#include "bluetoothcontroller.h"
-#include <albert/globalqueryhandler.h>
 #include <albert/extensionplugin.h>
+#include <albert/globalqueryhandler.h>
+class PluginPrivateBase;
 
 class Plugin : public albert::ExtensionPlugin,
                public albert::GlobalQueryHandler
@@ -12,6 +12,9 @@ class Plugin : public albert::ExtensionPlugin,
 
 public:
 
+    Plugin();
+    ~Plugin();
+
     QString defaultTrigger() const override;
     bool supportsFuzzyMatching() const override;
     void setFuzzyMatching(bool) override;
@@ -19,7 +22,6 @@ public:
 
 private:
 
-    bool fuzzy_;
-    BluetoothController controller;
+    std::unique_ptr<PluginPrivateBase> d;
 
 };

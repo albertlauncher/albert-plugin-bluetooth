@@ -2,14 +2,15 @@
 
 #include "bluetoothcontroller.h"
 #include "albert/logging.h"
-#include "bluetoothcontroller_p.h"
+#include "bluetoothcontrollerprivate.h"
 #include "bluetoothdevice.h"
-#include "bluetoothdevice_p.h"
+#include "bluetoothdeviceprivate.h"
 #include <Foundation/Foundation.h>
 #include <IOBluetooth/IOBluetooth.h>
 #include <ranges>
 #include <shared_mutex>
-using namespace albert;
+using enum BluetoothDevice::State;
+// using namespace albert;
 using namespace std;
 #if  ! __has_feature(objc_arc)
 #error This file must be compiled with ARC.
@@ -23,87 +24,67 @@ int IOBluetoothPreferenceGetDiscoverableState();
 void IOBluetoothPreferenceSetDiscoverableState(int state);
 }
 
+
 @interface BluetoothPowerDelegate : NSObject
 - (instancetype)initWith:(function<void(bool)>)callback;
 @end
+
 
 @interface BluetoothConnectionObserver : NSObject
 - (instancetype)initWith:(function<void(IOBluetoothDevice*, bool)>)cb;
 @end
 
-class BluetoothControllerPrivateMac : public BluetoothControllerPrivate
-{
-public:
-    using BluetoothControllerPrivate::BluetoothControllerPrivate;
-    __strong BluetoothPowerDelegate* power_delegate;
-    __strong BluetoothConnectionObserver* connection_observer;
-    shared_mutex lock;
-    map<IOBluetoothDevice*,shared_ptr<BluetoothDevice>> devices;
-};
+
+BluetoothControllerPrivate::BluetoothControllerPrivate(IOBluetoothHostController *c) :
+    BluetoothControllerPrivateBase(
+          QString::fromNSString(c.addressAsString),
+          QString::fromNSString(c.nameAsString),
+          c.powerState
+    ),
+    controller(c)
+{}
 
 BluetoothController::BluetoothController():
-    d(make_unique<BluetoothControllerPrivateMac>(
-          this,
-          IOBluetoothPreferenceGetControllerPowerState()
-    ))
+    d(make_unique<BluetoothControllerPrivate>([IOBluetoothHostController defaultController]))
 {
-    auto &p = *static_cast<BluetoothControllerPrivateMac*>(d.get());
+    auto &p = *static_cast<BluetoothControllerPrivate*>(d.get());
 
-    p.power_delegate =
-        [[BluetoothPowerDelegate alloc]
-            initWith:[this](bool v){ d->setPoweredOn(v); }];
+    auto power_callback = [this](bool v){ setPoweredOn(v); };
+    p.power_delegate = [[BluetoothPowerDelegate alloc] initWith:power_callback];
 
-    auto callback = [this](IOBluetoothDevice *device, bool v)
+    auto connection_callback = [this](IOBluetoothDevice *device, bool v)
     {
-        auto &p = *static_cast<BluetoothControllerPrivateMac*>(d.get());
+        auto &p = *static_cast<BluetoothControllerPrivate*>(d.get());
         if (auto it = p.devices.find(device); it == p.devices.end())
         {
-            auto btdp = make_unique<BluetoothDevicePrivate>(
-                nullptr,
-                *this,
-                QString::fromNSString(device.nameOrAddress),
-                device,
-                nil,
-                v ? BluetoothDevice::State::Connected : BluetoothDevice::State::Disconnected
-            );
             unique_lock lock(p.lock);
-            p.devices.emplace(device, make_shared<BluetoothDevice>(::move(btdp)));
+            p.devices.emplace(device, make_shared<BluetoothDevice>(
+                                          make_unique<BluetoothDevicePrivate>(*this, device)));
         }
         else
         {
-            auto state = v ? BluetoothDevice::State::Connected
-                           : BluetoothDevice::State::Disconnected;
-            it->second->d->state = state;
-            emit it->second->stateChanged(state);
+            auto state = v ? Connected : Disconnected;
+            it->second->setState(state);
         }
     };
-
-    p.connection_observer = [[BluetoothConnectionObserver alloc] initWith:callback];
+    p.connection_observer = [[BluetoothConnectionObserver alloc] initWith:connection_callback];
 
     // Initially create devices for all paired devices
     for (IOBluetoothDevice *device : [IOBluetoothDevice pairedDevices])
-    {
-        auto btdp = make_unique<BluetoothDevicePrivate>(
-            nullptr,
-            *this,
-            QString::fromNSString(device.nameOrAddress),
-            device,
-            nil,
-            device.isConnected ? BluetoothDevice::State::Connected
-                               : BluetoothDevice::State::Disconnected
-        );
-        p.devices.emplace(device, make_shared<BluetoothDevice>(::move(btdp)));
-    }
+        p.devices.emplace(device, make_shared<BluetoothDevice>(
+                                      make_unique<BluetoothDevicePrivate>(*this, device)));
 }
 
 BluetoothController::~BluetoothController() {}
 
-void BluetoothController::setPoweredOn(bool power_on)
-{ IOBluetoothPreferenceSetControllerPowerState(power_on ? 1 : 0); }
+void BluetoothController::toggle()
+{
+    IOBluetoothPreferenceSetControllerPowerState(poweredOn() ? 0 : 1);
+}
 
 vector<shared_ptr<BluetoothDevice>> BluetoothController::devices()
 {
-    auto &p = *static_cast<BluetoothControllerPrivateMac*>(d.get());
+    auto &p = *static_cast<BluetoothControllerPrivate*>(d.get());
     shared_lock lock(p.lock);
     auto v = views::values(p.devices);
     return vector<shared_ptr<BluetoothDevice>>{v.begin(), v.end()};
