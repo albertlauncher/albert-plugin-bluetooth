@@ -28,7 +28,7 @@ void BluetoothController::setPoweredOn(bool v)
         return;
 
     DEBG << QString("Bluetooth controller state changed: '%1' (%2 %3)")
-                .arg((v ? "on" : "off"), name(), address());
+                .arg((v ? "on" : "off"), d->name_, d->address_);
 
     d->powered_on_ = v;
     emit poweredOnChanged(v);
@@ -46,29 +46,26 @@ bool BluetoothController::addDevice(const shared_ptr<BluetoothDevice> &device)
     if (success)
     {
         DEBG << QString("Bluetooth devices added: '%1' (%2)").arg(d->name_, d->address_);
-        emit deviceAdded(device->address());
+        return ;
     }
-    else
-    {
-        DEBG << QString("Bluetooth device already exists: '%1' (%2)").arg(d->name_, d->address_);
-    }
-
-    return success;
+    
+    
+    if (d->devices == v)
+        return;
+    
+    
+    d->powered_on_ = v;
+    emit poweredOnChanged(v);
 }
 
-void BluetoothController::removeDevice(QString address)
+void BluetoothController::setDevices(map<QString, shared_ptr<BluetoothDevice> > &&)
 {
-    const auto it = d->devices_.find(address);
-    if (it != d->devices_.end())
-    {
-        DEBG << QString("Bluetooth device removed: '%1' (%2)").arg(it->second->name(), address);
-        d->devices_.erase(it);
-        emit deviceRemoved(address);
-        return true;
-    }
-    else
-    {
-        DEBG << QString("BluetoothController::removeDevice: Bluetooth device not found: '%1' (%2)").arg(d->name_, address);
-        return false;
-    }
+    if (d->devices == v)
+        return;
+    
+    DEBG << QString("Bluetooth devices state changed: '%1' (%2 %3)")
+                .arg((v ? "on" : "off"), d->name_, d->address_);
+    
+    d->powered_on_ = v;
+    emit poweredOnChanged(v);
 }

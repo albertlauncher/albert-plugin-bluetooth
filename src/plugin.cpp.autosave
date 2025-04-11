@@ -38,8 +38,8 @@ vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
             r.emplace_back(item, m.score());
         }
 
-        for (const auto &[address, device] : controller->devices())
-            if (m = matcher.match(device->name(), address), m)
+        for (const auto &[ad]device : controller->devices())
+            if (m = matcher.match(device->name(), device->address()), m)
             {
                 auto item = make_shared<BluetoothDeviceItem>(device);
                 item->moveToThread(qApp->thread());

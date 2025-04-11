@@ -26,5 +26,5 @@ private:
     bool powered_on_;
     std::shared_mutex lock;
     std::map<QString, std::shared_ptr<BluetoothDevice>> devices_;
-    friend class BluetoothController;
+    friend
 };

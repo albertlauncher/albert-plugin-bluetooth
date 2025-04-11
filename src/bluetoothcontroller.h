@@ -2,7 +2,7 @@
 
 #pragma once
 #include <QObject>
-#include <vector>
+#include <map>
 #include <memory>
 class BluetoothDevice;
 class BluetoothControllerPrivateBase;
@@ -18,22 +18,25 @@ public:
 
     const QString &address() const;
     const QString &name() const;
+    std::map<QString, std::shared_ptr<BluetoothDevice>> devices() const;
 
     void toggle();
     bool poweredOn() const;
 
-    std::vector<std::shared_ptr<BluetoothDevice>> devices();
 
 protected:
 
     void setName(const QString &);
     void setPoweredOn(bool);
+    bool addDevice(const std::shared_ptr<BluetoothDevice>&);
+    bool removeDevice(QString);
 
 signals:
 
     void nameChanged(const QString &);
     void poweredOnChanged(bool);
-    void devicesChanged();
+    void deviceAdded(const QString &);
+    void deviceRemoved(const QString &);
 
 private:
 
