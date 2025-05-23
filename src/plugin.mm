@@ -9,9 +9,10 @@
 #include <albert/standarditem.h>
 #include <albert/albert.h>
 ALBERT_LOGGING_CATEGORY("bluetooth")
+using namespace Qt::StringLiterals;
+using namespace albert::util;
 using namespace albert;
 using namespace std;
-using namespace util;
 #if  ! __has_feature(objc_arc)
 #error This file must be compiled with ARC.
 #endif
@@ -41,8 +42,8 @@ public:
 
 static QStringList icons(bool active)
 {
-    return QStringList(active ? QStringLiteral(":bt-active")
-                              : QStringLiteral(":bt-inactive"));
+    return QStringList(active ? u":bt-active"_s
+                              : u":bt-inactive"_s);
 }
 
 Plugin::Plugin() : d(make_unique<Private>())
@@ -55,7 +56,7 @@ Plugin::Plugin() : d(make_unique<Private>())
 
 Plugin::~Plugin() = default;
 
-QString Plugin::defaultTrigger() const { return QStringLiteral("bt "); }
+QString Plugin::defaultTrigger() const { return u"bt "_s; }
 
 bool Plugin::supportsFuzzyMatching() const { return true; }
 
@@ -76,12 +77,12 @@ vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
             id(), d->tr_bt, desc, d->tr_bt, icons(enabled),
             {
                 {
-                    QStringLiteral("pow"), enabled ? tr("Disable") : tr("Enable"),
+                    u"pow"_s, enabled ? tr("Disable") : tr("Enable"),
                     [=]{ IOBluetoothPreferenceSetControllerPowerState(enabled ? 0 : 1); }
                 },
                 {
-                    QStringLiteral("sett"), tr("Open settings"),
-                    [=]{ openUrl("x-apple.systempreferences:com.apple.Bluetooth"); }
+                    u"sett"_s, tr("Open settings"),
+                    [=]{ openUrl(u"x-apple.systempreferences:com.apple.Bluetooth"_s); }
                 }
             }),
             m.score()
@@ -106,19 +107,20 @@ vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
                 {
                     auto status = [device closeConnection];
                     if (status == kIOReturnSuccess)
-                        INFO <<  QString("Successfully disconnected '%1'.").arg(device_name);
+                        INFO <<  u"Successfully disconnected '%1'."_s
+                                    .arg(device_name);
                     else
-                        WARN <<  QString("Failed disconnecting '%1': Status '%2'")
-                                 .arg(device_name, status);
+                        WARN <<  u"Failed disconnecting '%1': Status '%2'"_s
+                                    .arg(device_name, status);
                 }
                 else
                 {
                     auto status = [device openConnection:d->delegate];
                     if (status == kIOReturnSuccess)
-                        INFO << QString("Successfully issued CREATE_CONNECTION command for '%1'.")
+                        INFO << u"Successfully issued CREATE_CONNECTION command for '%1'."_s
                                 .arg(device_name);
                     else
-                        WARN << QString("Failed issuing CREATE_CONNECTION command for '%1': Status '%2'")
+                        WARN << u"Failed issuing CREATE_CONNECTION command for '%1': Status '%2'"_s
                                 .arg(device_name, status);
                 }
             };
@@ -127,7 +129,7 @@ vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
                 StandardItem::make(
                     id(), device_name, desc, device_name, icons(device.isConnected),
                     {{
-                        QStringLiteral("toogle"),
+                        u"toogle"_s,
                         device.isConnected ? tr("Disconnect") : tr("Connect"),
                         action
                     }}
@@ -149,17 +151,13 @@ vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
 {
     auto name = QString::fromNSString(device.name);
     if (status == kIOReturnSuccess)
-        INFO << QString("Successfully connected to device: '%1'").arg(name);
+        INFO << u"Successfully connected to device: '%1'"_s.arg(name);
     else
     {
-        WARN << QString("Failed to connect to device: '%1', status: '%2'")
-                .arg(name).arg(status);
+        WARN << u"Failed to connect to device: '%1', status: '%2'"_s.arg(name).arg(status);
 
-        auto *n = new Notification(
-            name,
-            Plugin::tr("Connection failed")
-        );
-        QTimer::singleShot(5000, n, [n]{ n->deleteLater(); });
+        auto *n = new Notification(name, Plugin::tr("Connection failed"));
+        QTimer::singleShot(5000, n, [n] { n->deleteLater(); });
         n->send();
     }
 }
