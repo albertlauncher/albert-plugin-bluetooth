@@ -7,7 +7,7 @@
 #include <albert/matcher.h>
 #include <albert/notification.h>
 #include <albert/standarditem.h>
-#include <albert/albert.h>
+#include <albert/systemutil.h>
 ALBERT_LOGGING_CATEGORY("bluetooth")
 using namespace Qt::StringLiterals;
 using namespace albert::util;
