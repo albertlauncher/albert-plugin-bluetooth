@@ -1,7 +1,7 @@
 if(APPLE)
 
     cmake_minimum_required(VERSION 3.16)
-    project(bluetooth VERSION 4.4)
+    project(bluetooth VERSION 4.5)
 
     find_package(Albert REQUIRED)
 

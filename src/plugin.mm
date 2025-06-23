@@ -127,7 +127,7 @@ vector<RankItem> Plugin::handleGlobalQuery(const Query &query)
 
             r.emplace_back(
                 StandardItem::make(
-                    id(), device_name, desc, icons(device.isConnected),
+                    device_name, device_name, desc, icons(device.isConnected),
                     {{
                         u"toogle"_s,
                         device.isConnected ? tr("Disconnect") : tr("Connect"),
