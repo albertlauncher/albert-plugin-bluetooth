@@ -1,1 +1,1 @@
-# albert-plugin-bluetooth
+# Albert plugin: Bluetooth
