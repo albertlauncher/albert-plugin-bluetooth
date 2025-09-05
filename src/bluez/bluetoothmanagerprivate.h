@@ -2,6 +2,7 @@
 
 #pragma once
 #include <memory>
+class QString;
 class BluetoothManager;
 class OrgFreedesktopDBusObjectManagerInterface;
 
@@ -10,4 +11,8 @@ class BluetoothManagerPrivate
 public:
     BluetoothManager *q;
     std::unique_ptr<OrgFreedesktopDBusObjectManagerInterface> object_manager;
+
+
+    void onObjectInterfaceAdded(const QString object_path, const QString &interface);
+    void onObjectInterfaceRemoved(const QString object_path, const QString &interface);
 };

@@ -21,13 +21,12 @@ public:
 
 signals:
 
-    void controllerAdded(const QString &address);
-    void controllerRemoved(const QString &address);
+    void controllerAdded(const QString &id);
+    void controllerRemoved(const QString &id);
 
 private:
-
-    bool addController(const std::shared_ptr<BluetoothController> &controller);
-    bool removeController(const QString &address);
+    bool addController(const QString &id, const std::shared_ptr<BluetoothController> &controller);
+    bool removeController(const QString &id);
 
     std::map<QString, std::shared_ptr<BluetoothController>> controllers_;
     std::unique_ptr<BluetoothManagerPrivate> d;

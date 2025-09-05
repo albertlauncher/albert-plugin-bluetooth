@@ -26,33 +26,33 @@ void BluetoothController::setPoweredOn(bool on)
     }
 }
 
-bool BluetoothController::addDevice(const shared_ptr<BluetoothDevice> &dev)
+bool BluetoothController::addDevice(const QString &id, const shared_ptr<BluetoothDevice> &dev)
 {
-    const auto &[it, success] = devices_.emplace(dev->address(), dev);
+    const auto &[it, success] = devices_.emplace(id, dev);
     if (success)
     {
-        DEBG << u"Device added: '%1' (%2)"_s.arg(dev->name(), dev->address());
-        emit deviceAdded(dev->address());
+        DEBG << u"Device added: '%1' (%2)"_s.arg(dev->name(), id);
+        emit deviceAdded(id);
     }
     else
-        DEBG << u"Device already exists: '%1' (%2)"_s.arg(dev->name(), dev->address());
+        DEBG << u"Device already exists: '%1' (%2)"_s.arg(dev->name(), id);
 
     return success;
 }
 
-bool BluetoothController::removeDevice(const QString &address)
+bool BluetoothController::removeDevice(const QString &id)
 {
-    const auto it = devices_.find(address);
+    const auto it = devices_.find(id);
     if (it != devices_.end())
     {
-        DEBG << u"Device removed: '%1' (%2)"_s.arg(it->second->name(), address);
+        DEBG << u"Device removed: '%1' (%2)"_s.arg(it->second->name(), id);
         devices_.erase(it);
-        emit deviceRemoved(address);
+        emit deviceRemoved(id);
         return true;
     }
     else
     {
-        DEBG << u"Device to remove not found: %1"_s.arg(address);
+        DEBG << u"Device to remove not found: %1"_s.arg(id);
         return false;
     }
 }

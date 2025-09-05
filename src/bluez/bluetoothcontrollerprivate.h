@@ -2,19 +2,22 @@
 
 #pragma once
 #include <memory>
-class OrgFreedesktopDBusPropertiesInterface;
-class OrgBluezAdapter1Interface;
-class BluetoothDevice;
+#include <QString>
+#include "bluez.h"
 class BluetoothController;
-class QString;
-
 
 std::unique_ptr<BluetoothController> controllerFromNative(const QString &object_path);
-
 
 class BluetoothControllerPrivate
 {
 public:
-    std::unique_ptr<OrgFreedesktopDBusPropertiesInterface> properties;
-    std::unique_ptr<OrgBluezAdapter1Interface> adapter;
+    BluetoothControllerPrivate(const QString &object_path)
+        : object_path(object_path)
+        , adapter(bluez_service, object_path, QDBusConnection::systemBus())
+        , properties(bluez_service, object_path, QDBusConnection::systemBus())
+    {}
+
+    QString object_path;
+    OrgBluezAdapter1Interface adapter;
+    OrgFreedesktopDBusPropertiesInterface properties;
 };

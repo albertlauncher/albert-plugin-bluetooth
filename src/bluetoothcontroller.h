@@ -34,13 +34,12 @@ signals:
     void nameChanged(const QString &);
     void poweredOnChanged(bool);
 
-    void deviceAdded(const QString &address);
-    void deviceRemoved(const QString &address);
+    void deviceAdded(const QString &id);
+    void deviceRemoved(const QString &id);
 
 private:
-
-    bool addDevice(const std::shared_ptr<BluetoothDevice> &device);
-    bool removeDevice(const QString &address);
+    bool addDevice(const QString &id, const std::shared_ptr<BluetoothDevice> &device);
+    bool removeDevice(const QString &id);
 
     void setDeviceState();
 
@@ -51,5 +50,6 @@ private:
     std::unique_ptr<BluetoothControllerPrivate> d;
 
     friend class BluetoothManager;
+    friend class BluetoothManagerPrivate;
 
 };
