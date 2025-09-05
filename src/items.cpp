@@ -64,8 +64,8 @@ vector<Action> BluetoothControllerItem::actions() const
 
 // -------------------------------------------------------------------------------------------------
 
-BluetoothDeviceItem::BluetoothDeviceItem(shared_ptr<BluetoothDevice> d):
-    device(::move(d))
+BluetoothDeviceItem::BluetoothDeviceItem(shared_ptr<BluetoothDevice> dev):
+    device(::move(dev))
 {
     connect(device.get(), &BluetoothDevice::stateChanged,
             this, [this]{ dataChanged(); });
