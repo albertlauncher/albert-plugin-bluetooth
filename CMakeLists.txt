@@ -26,9 +26,14 @@ if(APPLE)
         "-framework IOBluetooth"
     )
 
+    albert_plugin_include_directories(PRIVATE
+        src/iobluetooth
+    )
+
     albert_plugin_sources(PRIVATE
         src/iobluetooth/*.h
         src/iobluetooth/*.mm
+        src/iobluetooth/*.cpp
     )
 
 elseif(UNIX)

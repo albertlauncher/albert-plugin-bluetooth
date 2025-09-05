@@ -3,11 +3,29 @@
 #pragma once
 #include <QObject>
 #include <albert/item.h>
-#include <set>
 #include <memory>
 class BluetoothController;
+class BluetoothDevice;
 
-class BluetoothControllerItem : public QObject, public albert::Item
+class BluetoothDeviceItem : public QObject, public albert::detail::DynamicItem
+{
+    std::shared_ptr<BluetoothDevice> device;
+
+public:
+
+    BluetoothDeviceItem(std::shared_ptr<BluetoothDevice>);
+
+    QString id() const override;
+    QString text() const override;
+    QString subtext() const override;
+    QStringList iconUrls() const override;
+    QString inputActionText() const override;
+    std::vector<albert::Action> actions() const override;
+
+};
+
+
+class BluetoothControllerItem : public QObject, public albert::detail::DynamicItem
 {
     std::shared_ptr<BluetoothController> controller;
 
@@ -22,12 +40,6 @@ public:
     QString inputActionText() const override;
     std::vector<albert::Action> actions() const override;
 
-    void addObserver(Observer *observer) override;
-    void removeObserver(Observer *observer) override;
-    void notifyObservers();
-    std::set<Item::Observer*> observers;
-
     static const QString tr_bluetooth;
 
 };
-

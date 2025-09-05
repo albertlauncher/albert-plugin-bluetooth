@@ -2,38 +2,57 @@
 
 #include "bluetoothcontroller.h"
 #include "bluetoothdevice.h"
-#include "bluetoothcontrollerprivatebase.h"
 #include <albert/logging.h>
+using namespace Qt::StringLiterals;
 using namespace std;
-
-const QString &BluetoothController::address() const { return d->address; }
-
-const QString &BluetoothController::name() const { return d->name; }
 
 void BluetoothController::setName(const QString &name)
 {
-    if (d->name == name)
-        return;
-
-    DEBG << QStringLiteral("Bluetooth controller name changed to '%1' (%2)").arg(name, d->address);
-
-    d->name = name;
-    emit nameChanged(name);
+    if (name_ != name)
+    {
+        name_ = name;
+        DEBG << u"Bluetooth controller name changed to '%1' (%2)"_s.arg(name_, address_);
+        emit nameChanged(name_);
+    }
+}
+void BluetoothController::setPoweredOn(bool on)
+{
+    if (powered_on_ != on)
+    {
+        powered_on_ = on;
+        DEBG << u"Bluetooth controller state changed: '%1' (%2 %3)"_s
+                    .arg(powered_on_ ? u"on"_s : u"off"_s, name_, address_);
+        emit poweredOnChanged(powered_on_);
+    }
 }
 
-bool BluetoothController::poweredOn() const { return d->powered_on; }
-
-void BluetoothController::setPoweredOn(bool v)
+bool BluetoothController::addDevice(const shared_ptr<BluetoothDevice> &dev)
 {
-    if (d->powered_on == v)
-        return;
+    const auto &[it, success] = devices_.emplace(dev->address(), dev);
+    if (success)
+    {
+        DEBG << u"Device added: '%1' (%2)"_s.arg(dev->name(), dev->address());
+        emit deviceAdded(dev->address());
+    }
+    else
+        DEBG << u"Device already exists: '%1' (%2)"_s.arg(dev->name(), dev->address());
 
-    DEBG << QStringLiteral("Bluetooth controller state changed: '%1' (%2 %3)")
-                .arg((v ? QStringLiteral("on")
-                        : QStringLiteral("off")),
-                     name(),
-                     address());
+    return success;
+}
 
-    d->powered_on = v;
-    emit poweredOnChanged(v);
+bool BluetoothController::removeDevice(const QString &address)
+{
+    const auto it = devices_.find(address);
+    if (it != devices_.end())
+    {
+        DEBG << u"Device removed: '%1' (%2)"_s.arg(it->second->name(), address);
+        devices_.erase(it);
+        emit deviceRemoved(address);
+        return true;
+    }
+    else
+    {
+        DEBG << u"Device to remove not found: %1"_s.arg(address);
+        return false;
+    }
 }

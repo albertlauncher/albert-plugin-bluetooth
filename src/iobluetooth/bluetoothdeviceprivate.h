@@ -1,20 +1,17 @@
 // Copyright (c) 2024-2025 Manuel Schneider
 
 #pragma once
-#include "bluetoothdeviceprivatebase.h"
-#include <Foundation/Foundation.h>
-#include <IOBluetooth/IOBluetooth.h>
-class BluetoothController;
-@class IOBluetoothDevice;
+#include <memory>
 @class BluetoothConnectionHandler;
+@class IOBluetoothDevice;
+class BluetoothController;
+class BluetoothDevice;
 
-class BluetoothDevicePrivate : public BluetoothDevicePrivateBase
+std::unique_ptr<BluetoothDevice> deviceFromNative(BluetoothController *controller, IOBluetoothDevice *device);
+
+class BluetoothDevicePrivate
 {
 public:
-    BluetoothDevicePrivate(BluetoothController &controller, IOBluetoothDevice *_device);
-
     __strong IOBluetoothDevice *device;
-    __strong BluetoothConnectionHandler* connection_handler;
-
+    __strong BluetoothConnectionHandler *connection_handler;
 };
-

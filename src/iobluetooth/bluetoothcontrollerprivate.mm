@@ -4,13 +4,9 @@
 #include "bluetoothcontrollerprivate.h"
 #include "bluetoothdevice.h"
 #include "bluetoothdeviceprivate.h"
-#include "plugin.h"
-#include <Foundation/Foundation.h>
 #include <IOBluetooth/IOBluetooth.h>
 #include <albert/logging.h>
-#include <ranges>
 using enum BluetoothDevice::State;
-// using namespace albert;
 using namespace std;
 #if  ! __has_feature(objc_arc)
 #error This file must be compiled with ARC.
@@ -25,70 +21,12 @@ void IOBluetoothPreferenceSetDiscoverableState(int state);
 }
 
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 @interface BluetoothPowerDelegate : NSObject
 - (instancetype)initWith:(function<void(bool)>)callback;
 - (void)dealloc;
 @end
-
-
-@interface BluetoothConnectionObserver : NSObject
-- (instancetype)initWith:(function<void(IOBluetoothDevice*, bool)>)cb;
-- (void)dealloc;
-@end
-
-BluetoothControllerPrivate::BluetoothControllerPrivate(Plugin &p, IOBluetoothHostController *c):
-    BluetoothControllerPrivateBase(QString::fromNSString(c.addressAsString),
-                                   QString::fromNSString(c.nameAsString),
-                                   c.powerState),
-    plugin(p),
-    controller(c)
-{}
-
-BluetoothController::BluetoothController(unique_ptr<BluetoothControllerPrivateBase> &&c):
-    d(::move(c))
-{
-    auto &p = *static_cast<BluetoothControllerPrivate*>(d.get());
-
-    auto power_callback = [this](bool v){ setPoweredOn(v); };
-    p.power_delegate = [[BluetoothPowerDelegate alloc] initWith:power_callback];
-
-    auto connection_callback = [this](IOBluetoothDevice *device, bool connected)
-    {
-        auto &plugin = static_cast<BluetoothControllerPrivate*>(d.get())->plugin;
-        auto devices = plugin.devices();
-        // find device by lowerbound on address
-        auto it = ranges::lower_bound(devices,
-                                      QString::fromNSString(device.addressString),
-                                      std::less<>(),
-                                      &BluetoothDevice::address);
-
-        if (it == devices.end())
-            // New device, 'connected' should be always true here
-            plugin.addDevice(make_shared<BluetoothDevice>(
-                make_unique<BluetoothDevicePrivate>(*this, device)));
-        else
-            // Device already exists
-            (*it)->setState(connected ? Connected : Disconnected);
-    };
-    p.connection_observer = [[BluetoothConnectionObserver alloc] initWith:connection_callback];
-
-    // Initially create devices for all paired devices
-    for (IOBluetoothDevice *device : [IOBluetoothDevice pairedDevices])
-        p.plugin.addDevice(make_shared<BluetoothDevice>(
-            make_unique<BluetoothDevicePrivate>(*this, device)));
-}
-
-BluetoothController::~BluetoothController() {}
-
-void BluetoothController::toggle()
-{
-    IOBluetoothPreferenceSetControllerPowerState(poweredOn() ? 0 : 1);
-}
-
-
-// ------------------------------------------------------------------------------------------------
-// Do _not_ move upwards. Interface implementation confuses lupdate.
-// ------------------------------------------------------------------------------------------------
 
 @implementation BluetoothPowerDelegate {
     function<void(bool)> _callback;
@@ -117,6 +55,13 @@ void BluetoothController::toggle()
 
 @end
 
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+@interface BluetoothConnectionObserver : NSObject
+- (instancetype)initWith:(function<void(IOBluetoothDevice*, bool)>)cb;
+- (void)dealloc;
+@end
 
 @implementation BluetoothConnectionObserver {
     function<void(IOBluetoothDevice *device, bool)> callback;
@@ -201,3 +146,49 @@ void BluetoothController::toggle()
 }
 
 @end
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+unique_ptr<BluetoothController> defaultController()
+{
+    const auto c = [IOBluetoothHostController defaultController];
+    return make_unique<BluetoothController>(make_unique<BluetoothControllerPrivate>(c));
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+BluetoothController::BluetoothController(unique_ptr<BluetoothControllerPrivate> &&p)
+    : address_(QString::fromNSString(p->controller.addressAsString))
+    , name_(QString::fromNSString(p->controller.nameAsString))
+    , powered_on_(p->controller.powerState == kBluetoothHCIPowerStateON)
+    , d(::move(p))
+{
+    // auto &p = *static_cast<BluetoothControllerPrivate*>(d.get());
+
+    auto power_callback = [this](bool v){ setPoweredOn(v); };
+    d->power_delegate = [[BluetoothPowerDelegate alloc] initWith:power_callback];
+
+    auto connection_callback = [this](IOBluetoothDevice *device, bool connected) {
+        const auto address = QString::fromNSString(device.addressString);
+        if (auto it = devices_.find(address); it == devices_.end())
+            // New device, 'connected' should be always true here
+            addDevice(deviceFromNative(this, device));
+        else
+            // Device already exists
+            it->second->setState(connected ? Connected : Disconnected);
+    };
+    d->connection_observer = [[BluetoothConnectionObserver alloc] initWith:connection_callback];
+
+    // Initially create devices for all paired devices
+    for (IOBluetoothDevice *device : [IOBluetoothDevice pairedDevices])
+        addDevice(deviceFromNative(this, device));
+}
+
+BluetoothController::~BluetoothController() {}
+
+void BluetoothController::toggle() { IOBluetoothPreferenceSetControllerPowerState(poweredOn() ? 0 : 1); }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Do _not_ move upwards. Interface implementation confuses lupdate.

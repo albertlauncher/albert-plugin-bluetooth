@@ -2,27 +2,24 @@
 
 #pragma once
 #include <QObject>
-#include <QString>
 #include <memory>
 #include <optional>
 class BluetoothController;
-class BluetoothDevicePrivateBase;
+class BluetoothDevicePrivate;
 
 class BluetoothDevice : public QObject
 {
     Q_OBJECT
-
 public:
-
     enum class State { Disconnected, Connecting, Connected, Disconnecting };
 
-    BluetoothDevice(std::unique_ptr<BluetoothDevicePrivateBase>&&);
+    BluetoothDevice(BluetoothController *controller, std::unique_ptr<BluetoothDevicePrivate> &&);
     ~BluetoothDevice();
 
-    BluetoothController &controller() const;
-    const QString &address() const;
-    const QString &name() const;
-    State state() const;
+    inline BluetoothController &controller() const { return controller_; }
+    inline const QString &address() { return address_; }
+    inline const QString &name() const { return name_; }
+    inline State state() const { return state_; }
     QString stateString() const;
 
     std::optional<QString> toggleConnected();
@@ -41,7 +38,13 @@ signals:
 
 private:
 
-    std::unique_ptr<BluetoothDevicePrivateBase> d;
+    BluetoothController &controller_;
+    QString address_;
+    QString name_;
+    BluetoothDevice::State state_;
+    std::unique_ptr<BluetoothDevicePrivate> d;
+
     friend class BluetoothController;
+    friend class BluetoothDevicePrivate;
 
 };

@@ -3,17 +3,22 @@
 #include "bluetoothcontroller.h"
 #include "bluetoothdevice.h"
 #include "bluetoothdeviceprivate.h"
-#include <Foundation/Foundation.h>
 #include <IOBluetooth/IOBluetooth.h>
-#include <QTimer>
+#include <QString>
 #include <albert/logging.h>
-#include <albert/notification.h>
+#include <memory>
+class BluetoothController;
 using enum BluetoothDevice::State;
-using namespace albert;
+using namespace Qt::StringLiterals;
 using namespace std;
 #if  ! __has_feature(objc_arc)
 #error This file must be compiled with ARC.
 #endif
+
+unique_ptr<BluetoothDevice> deviceFromNative(BluetoothController *controller, IOBluetoothDevice *device)
+{ return make_unique<BluetoothDevice>(controller, make_unique<BluetoothDevicePrivate>(device)); }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 @interface BluetoothConnectionHandler : NSObject
 
@@ -23,27 +28,41 @@ using namespace std;
                     status:(IOReturn)status;
 @end
 
+@implementation BluetoothConnectionHandler{
+    function<void(IOReturn)> _callback;
+}
 
-BluetoothDevicePrivate::BluetoothDevicePrivate(BluetoothController &controller,
-                                               IOBluetoothDevice *_device) :
-    BluetoothDevicePrivateBase(controller,
-                               QString::fromNSString(_device.addressString),
-                               QString::fromNSString(_device.name),
-                               _device.isConnected ? BluetoothDevice::State::Connected
-                                                   : BluetoothDevice::State::Disconnected),
-    device(_device),
-    connection_handler(nullptr)  // lazy
-{}
+- (instancetype)initWith:(function<void(IOReturn)>)callback
+{
+    self = [super init];
+    if (self) {
+        _callback = callback;
+    }
+    return self;
+}
+
+- (void)connectionComplete:(IOBluetoothDevice *)device
+                    status:(IOReturn)status
+{
+    _callback(status);
+}
+
+@end
 
 
-BluetoothDevice::BluetoothDevice(std::unique_ptr<BluetoothDevicePrivateBase> &&_d):
-    d(::move(_d))
+// ---------------------------------------------------------------------------------------------------------------------
+
+BluetoothDevice::BluetoothDevice(BluetoothController *controller,
+                                 unique_ptr<BluetoothDevicePrivate> &&p)
+    : controller_(*controller)
+    , address_(QString::fromNSString(p->device.addressString))
+    , name_(QString::fromNSString(p->device.name))
+    , state_(p->device.isConnected ? Connected : Disconnected)
+    , d(::move(p))
 {
 }
 
-BluetoothDevice::~BluetoothDevice()
-{
-}
+BluetoothDevice::~BluetoothDevice() {}
 
 std::optional<QString> BluetoothDevice::toggleConnected()
 {
@@ -62,12 +81,12 @@ std::optional<QString> BluetoothDevice::toggleConnected()
             status == kIOReturnSuccess)
         {
             setState(Disconnected);
-            INFO << QString("Successfully disconnected '%1'.").arg(d->name_);
+            INFO << u"Successfully disconnected '%1'."_s.arg(name_);
         }
         else
         {
             setState(Connected);
-            WARN << QString("Failed disconnecting '%1': Status '%2'").arg(d->name_, status);
+            WARN << u"Failed disconnecting '%1': Status '%2'"_s.arg(name_, status);
         }
     }
 
@@ -99,42 +118,14 @@ std::optional<QString> BluetoothDevice::toggleConnected()
             if (auto status = [p.device openConnection:p.connection_handler];
                 status == kIOReturnSuccess)
             {
-                DEBG << QString("Successfully issued CREATE_CONNECTION command for '%1'.")
-                            .arg(d->name_);
+                DEBG << u"Successfully issued CREATE_CONNECTION command for '%1'."_s.arg(name_);
                 setState(Connecting);
             }
             else
             {
-                WARN << QString("Failed issuing CREATE_CONNECTION command for '%1': Status '%2'")
-                            .arg(d->name_, status);
+                WARN << u"Failed issuing CREATE_CONNECTION command for '%1': Status '%2'"_s.arg(name_, status);
             }
         }
     }
     return {};
 }
-
-// ------------------------------------------------------------------------------------------------
-// Do _not_ move upwards. Interface implementation confuses lupdate.
-// ------------------------------------------------------------------------------------------------
-
-@implementation BluetoothConnectionHandler{
-    function<void(IOReturn)> _callback;
-}
-
-- (instancetype)initWith:(function<void(IOReturn)>)callback
-{
-    self = [super init];
-    if (self) {
-        _callback = callback;
-    }
-    return self;
-}
-
-- (void)connectionComplete:(IOBluetoothDevice *)device
-                    status:(IOReturn)status
-{
-    _callback(status);
-}
-
-@end
-

@@ -2,35 +2,35 @@
 
 #include "bluetoothcontroller.h"
 #include "bluetoothdevice.h"
-#include "bluetoothdeviceprivatebase.h"
 #include <QTimer>
 #include <albert/logging.h>
 #include <albert/notification.h>
+using enum BluetoothDevice::State;
+using namespace Qt::StringLiterals;
 using namespace albert::util;
 using namespace albert;
-using enum BluetoothDevice::State;
-
-BluetoothController &BluetoothDevice::controller() const { return d->controller_; }
-
-const QString &BluetoothDevice::address() const { return d->address_; }
-
-const QString &BluetoothDevice::name() const { return d->name_; }
-
-BluetoothDevice::State BluetoothDevice::state() const { return d->state_; }
+using namespace std;
 
 void BluetoothDevice::powerOnAndConnect()
 {
     Q_ASSERT(controller().poweredOn() == false);
-
-    controller().toggle();
-    connect(&controller(), &BluetoothController::poweredOnChanged,
-            this, &BluetoothDevice::toggleConnected,
-            Qt::SingleShotConnection);
+    if (controller().poweredOn())
+    {
+        if (state() == Disconnected)
+            toggleConnected();
+    }
+    else
+    {
+        controller().toggle();
+        connect(&controller(), &BluetoothController::poweredOnChanged,
+                this, &BluetoothDevice::toggleConnected,
+                Qt::SingleShotConnection);
+    }
 }
 
 QString BluetoothDevice::stateString() const
 {
-    switch (d->state_) {
+    switch (state_) {
     case Disconnected: return tr("Disconnected");
     case Connecting: return tr("Connecting");
     case Connected: return tr("Connected");
@@ -41,29 +41,26 @@ QString BluetoothDevice::stateString() const
 
 void BluetoothDevice::setName(const QString &name)
 {
-    if (d->name_ == name)
-        return;
-
-    DEBG << QStringLiteral("Bluetooth device name changed to '%1' (%2)")
-                .arg(name, d->address_);
-
-    d->name_ = name;
-    emit nameChanged(name);
+    if (name_ != name)
+    {
+        name_ = name;
+        DEBG << u"Bluetooth device name changed to '%1' (%2)"_s.arg(name_, address_);
+        emit nameChanged(name_);
+    }
 }
 
 void BluetoothDevice::setState(State s)
 {
-    if (d->state_ == s)
-        return;
-
-    DEBG << QStringLiteral("Bluetooth device state changed to '%1' (%2 %3)")
-                .arg(stateString(), d->name_, d->address_);
-
-    d->state_ = s;
-    emit stateChanged(s);
+    if (state_ != s)
+    {
+        state_ = s;
+        DEBG << QStringLiteral("Bluetooth device state changed to '%1' (%2 %3)")
+                    .arg(stateString(), name_, address_);
+        emit stateChanged(s);
+    }
 }
 
-void BluetoothDevice::connectionCallback(std::optional<QString> error)
+void BluetoothDevice::connectionCallback(optional<QString> error)
 {
     if (error)
     {

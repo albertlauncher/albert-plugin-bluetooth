@@ -1,25 +1,17 @@
 // Copyright (c) 2024-2025 Manuel Schneider
 
 #pragma once
-#include "bluetoothcontrollerprivatebase.h"
-#include <Foundation/Foundation.h>
-#include <IOBluetooth/IOBluetooth.h>
-#include <map>
 #include <memory>
-#include <shared_mutex>
 @class BluetoothConnectionObserver;
 @class BluetoothPowerDelegate;
+@class IOBluetoothHostController;
 class BluetoothController;
-class BluetoothDevice;
-class Plugin;
 
+std::unique_ptr<BluetoothController> defaultController();
 
-class BluetoothControllerPrivate : public BluetoothControllerPrivateBase
+class BluetoothControllerPrivate
 {
 public:
-    BluetoothControllerPrivate(Plugin& plugin, IOBluetoothHostController *controller);
-
-    Plugin& plugin;
     __strong IOBluetoothHostController *controller;
     __strong BluetoothPowerDelegate* power_delegate;
     __strong BluetoothConnectionObserver* connection_observer;
