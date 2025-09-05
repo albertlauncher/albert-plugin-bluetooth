@@ -3,6 +3,8 @@
 #pragma once
 #include <QVariantMap>
 #include <QDBusObjectPath>
+#include <QDBusMetaType>
+
 using namespace Qt::StringLiterals;
 
 static const auto bluez_service = u"org.bluez"_s;
@@ -13,6 +15,11 @@ Q_DECLARE_METATYPE(NestedVariantMap)
 
 using ManagedObjects = QMap<QDBusObjectPath, NestedVariantMap>;
 Q_DECLARE_METATYPE(ManagedObjects)
+
+static void registerBluezTypes() {
+    qDBusRegisterMetaType<NestedVariantMap>();
+    qDBusRegisterMetaType<ManagedObjects>();
+}
 
 class OrgFreedesktopDBusPropertiesInterface;
 class OrgFreedesktopDBusObjectManagerInterface;

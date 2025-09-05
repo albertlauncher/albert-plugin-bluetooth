@@ -13,6 +13,9 @@ using namespace std;
 BluetoothManager::BluetoothManager()
     : d(make_unique<BluetoothManagerPrivate>(this))
 {
+    registerBluezTypes();
+
+
     d->object_manager = make_unique<IObjectManager>(bluez_service,
                                                     bluez_object_manager_path,
                                                     QDBusConnection::systemBus());
