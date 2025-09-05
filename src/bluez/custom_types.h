@@ -3,9 +3,10 @@
 #pragma once
 #include <QVariantMap>
 #include <QDBusObjectPath>
+using namespace Qt::StringLiterals;
 
-static constexpr const char *bluez_service = "org.bluez";
-static constexpr const char *bluez_object_manager_path = "/";
+static const auto bluez_service = u"org.bluez"_s;
+static const auto bluez_object_manager_path = u"/"_s;
 
 using NestedVariantMap = QMap<QString, QVariantMap>;
 Q_DECLARE_METATYPE(NestedVariantMap)

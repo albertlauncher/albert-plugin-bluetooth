@@ -5,11 +5,15 @@
 #include "bluetoothmanager.h"
 #include "bluetoothmanagerprivate.h"
 
-BluetoothManagerPrivate::BluetoothManagerPrivate(BluetoothManager *q)
-    : q_(q)
+
+BluetoothManager::BluetoothManager()
+    : d(std::make_unique<BluetoothManagerPrivate>(this))
 {
     // On macos there is only one active host controller
-    q_->addController(defaultController());
+    addController(defaultController());
 }
 
-BluetoothManagerPrivate::~BluetoothManagerPrivate() {}
+BluetoothManager::~BluetoothManager()
+{
+
+}

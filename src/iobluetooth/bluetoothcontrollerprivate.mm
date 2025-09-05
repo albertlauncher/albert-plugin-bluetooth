@@ -190,5 +190,3 @@ BluetoothController::~BluetoothController() {}
 
 void BluetoothController::toggle() { IOBluetoothPreferenceSetControllerPowerState(poweredOn() ? 0 : 1); }
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Do _not_ move upwards. Interface implementation confuses lupdate.

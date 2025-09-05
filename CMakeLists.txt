@@ -14,7 +14,7 @@ albert_plugin(
         Core
 )
 
-if(APPLE)
+if(APPLeE)
 
     albert_plugin_compile_options(PRIVATE
         "-fobjc-arc"
