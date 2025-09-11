@@ -1,15 +1,39 @@
+cmake_minimum_required(VERSION 3.16)
+project(bluetooth VERSION 5.0)
+
+find_package(Albert REQUIRED)
+
+albert_plugin(
+    SOURCES
+        src/*.h
+        src/*.cpp
+        ${PROJECT_NAME}.qrc
+    INCLUDE PRIVATE
+        src/
+    QT
+        Core
+)
+
 if(APPLE)
 
-    cmake_minimum_required(VERSION 3.16)
-    project(bluetooth VERSION 4.5)
-
-    find_package(Albert REQUIRED)
-
-    albert_plugin(
-        LINK PRIVATE "objc" "-framework IOBluetooth"
-        QT Core
+    albert_plugin_compile_options(PRIVATE
+        "-fobjc-arc"
     )
 
-    target_compile_options(${PROJECT_NAME} PRIVATE "-fobjc-arc")
+    albert_plugin_link(PRIVATE
+        "objc"
+        "-framework Foundation"
+        "-framework IOBluetooth"
+    )
+
+    albert_plugin_include_directories(PRIVATE
+        src/iobluetooth
+    )
+
+    albert_plugin_sources(PRIVATE
+        src/iobluetooth/*.h
+        src/iobluetooth/*.mm
+        src/iobluetooth/*.cpp
+    )
 
 endif()

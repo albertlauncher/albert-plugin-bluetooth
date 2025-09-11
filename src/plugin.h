@@ -1,27 +1,26 @@
-// Copyright (c) 2024 Manuel Schneider
+// Copyright (c) 2024-2025 Manuel Schneider
 
 #pragma once
-#include <albert/globalqueryhandler.h>
+#include "bluetoothmanager.h"
 #include <albert/extensionplugin.h>
+#include <albert/indexqueryhandler.h>
+#include <vector>
 
 class Plugin : public albert::util::ExtensionPlugin,
-               public albert::GlobalQueryHandler
+               public albert::util::IndexQueryHandler
 {
     ALBERT_PLUGIN
 
 public:
 
-    Plugin();
-    ~Plugin();
-
     QString defaultTrigger() const override;
-    bool supportsFuzzyMatching() const override;
-    void setFuzzyMatching(bool) override;
-    std::vector<albert::RankItem> handleGlobalQuery(const albert::Query &) override;
+    void updateIndexItems() override;
 
 private:
 
-    class Private;
-    std::unique_ptr<Private> d;
+    void reconnect();
+
+    BluetoothManager bt_mgr;
+    std::vector<QMetaObject::Connection> connections;
 
 };
