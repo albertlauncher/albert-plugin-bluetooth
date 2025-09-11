@@ -36,4 +36,22 @@ if(APPLE)
         src/iobluetooth/*.cpp
     )
 
+elseif(UNIX)
+
+    albert_plugin_link_qt(DBus VERSION 6.0 REQUIRED)
+
+    albert_plugin_dbus_interface(
+        XML "src/bluez/bluez.xml"
+        INCLUDE "custom_types.h"
+    )
+
+    albert_plugin_include_directories(PRIVATE
+        src/bluez
+    )
+
+    albert_plugin_sources(PRIVATE
+        src/bluez/*.h
+        src/bluez/*.cpp
+    )
+
 endif()
