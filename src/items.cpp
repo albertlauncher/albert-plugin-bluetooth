@@ -22,7 +22,7 @@ static void showError(const optional<QString> &err){
 
 // -------------------------------------------------------------------------------------------------
 
-const QString BluetoothControllerItem::tr_bluetooth = QObject::tr("Bluetooth");
+const QString BluetoothControllerItem::tr_bluetooth = tr("Bluetooth");
 
 BluetoothControllerItem::BluetoothControllerItem(shared_ptr<BluetoothController> c) :
     controller(::move(c))

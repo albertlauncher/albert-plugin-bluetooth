@@ -2,29 +2,70 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en_US">
 <context>
-    <name>Plugin</name>
+    <name>BluetoothController</name>
     <message>
-        <source>Enabled</source>
+        <source>Powered off</source>
         <translation></translation>
     </message>
     <message>
-        <source>Disabled</source>
+        <source>Powering on</source>
         <translation></translation>
     </message>
     <message>
-        <source>Disable</source>
+        <source>Powered on</source>
         <translation></translation>
     </message>
     <message>
-        <source>Enable</source>
+        <source>Powering off</source>
         <translation></translation>
     </message>
+</context>
+<context>
+    <name>BluetoothControllerItem</name>
+    <message>
+        <source>Toggle</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Open Bluetooth settings</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Bluetooth</source>
+        <translation></translation>
+    </message>
+</context>
+<context>
+    <name>BluetoothDevice</name>
     <message>
         <source>Connected</source>
         <translation></translation>
     </message>
     <message>
-        <source>Not connected</source>
+        <source>Connecting</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Disconnected</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Disconnecting</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Connecting device failed</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Disconnecting device failed</source>
+        <translation></translation>
+    </message>
+</context>
+<context>
+    <name>BluetoothDeviceItem</name>
+    <message>
+        <source>Connect</source>
         <translation></translation>
     </message>
     <message>
@@ -32,19 +73,7 @@
         <translation></translation>
     </message>
     <message>
-        <source>Connect</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Connection failed</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Bluetooth</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Open settings</source>
+        <source>Failed to power on controller.</source>
         <translation></translation>
     </message>
 </context>
