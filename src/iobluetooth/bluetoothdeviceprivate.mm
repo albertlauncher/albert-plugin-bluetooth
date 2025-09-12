@@ -102,6 +102,8 @@ BluetoothDevicePrivate::~BluetoothDevicePrivate()
 
 QString BluetoothDevicePrivate::address() { return QString::fromNSString(native_device_.addressString); }
 
+uint32_t BluetoothDevicePrivate::classOfDevice() { return native_device_.classOfDevice; }
+
 optional<QString> BluetoothDevicePrivate::connectDevice()
 {
     if (auto status = [native_device_ openConnection:connection_observer_];  // async

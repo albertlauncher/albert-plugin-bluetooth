@@ -15,6 +15,7 @@ public:
     ~BluetoothDevicePrivate();
 
     QString address() override;
+    uint32_t classOfDevice() override;
     std::optional<QString> connectDevice() override;
     std::optional<QString> disconnectDevice() override;
 
