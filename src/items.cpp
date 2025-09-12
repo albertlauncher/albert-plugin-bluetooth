@@ -6,6 +6,7 @@
 #include <QEventLoop>
 #include <albert/logging.h>
 #include <albert/messagebox.h>
+#include <albert/networkutil.h>
 #include <albert/systemutil.h>
 using enum BluetoothController::State;
 using enum BluetoothDevice::State;
@@ -115,15 +116,24 @@ QString BluetoothDeviceItem::subtext() const
     return {};
 }
 
-QStringList BluetoothDeviceItem::iconUrls() const
+static inline QString stateIconUrl(BluetoothDevice::State state)
 {
-    switch (device->state()) {
+    switch (state) {
     case Disconnected:  return {u":bt-inactive"_s};
     case Connecting:    return {u":bt-change"_s};
     case Connected:     return {u":bt-active"_s};
     case Disconnecting: return {u":bt-change"_s};
     }
     return {};
+}
+
+QStringList BluetoothDeviceItem::iconUrls() const
+{
+    auto icon_urls = device->deviceIconUrls();
+    for (auto &icon_url : icon_urls)
+        icon_url = u"comp:?src1=%1&size1=0.70&src2=%2&size2=0.7"_s
+                       .arg(percentEncoded(icon_url), percentEncoded(stateIconUrl(device->state())));
+    return icon_urls;
 }
 
 QString BluetoothDeviceItem::inputActionText() const { return device->name(); }

@@ -13,6 +13,8 @@ public:
     BluetoothDevicePrivate(BluetoothController *controller, const OrgBluezDevice1Interface &device);
 
     QString address() override;
+    uint32_t classOfDevice() override;
+    QStringList deviceIconUrls() override;
     std::optional<QString> connectDevice() override;
     std::optional<QString> disconnectDevice() override;
 

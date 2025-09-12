@@ -9,6 +9,7 @@
 #include <albert/notification.h>
 class BluetoothController;
 using enum BluetoothDevice::State;
+using namespace Qt::StringLiterals;
 using namespace albert;
 using namespace std;
 
@@ -65,3 +66,9 @@ std::optional<QString> BluetoothDevicePrivate::disconnectDevice()
     });
     return {};
 }
+
+uint32_t BluetoothDevicePrivate::classOfDevice() { return device_.deviceClass(); }
+
+QStringList BluetoothDevicePrivate::deviceIconUrls()
+{ return QStringList(u"xdg:"_s + device_.icon()) + BluetoothDevice::deviceIconUrls(); }
+
