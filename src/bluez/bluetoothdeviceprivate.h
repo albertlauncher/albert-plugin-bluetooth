@@ -14,7 +14,6 @@ public:
 
     QString address() override;
     uint32_t classOfDevice() override;
-    QStringList deviceIconUrls() override;
     std::optional<QString> connectDevice() override;
     std::optional<QString> disconnectDevice() override;
 

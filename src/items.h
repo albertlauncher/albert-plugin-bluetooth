@@ -19,7 +19,7 @@ public:
     QString id() const override;
     QString text() const override;
     QString subtext() const override;
-    QStringList iconUrls() const override;
+    std::unique_ptr<albert::Icon> icon() const override;
     QString inputActionText() const override;
     std::vector<albert::Action> actions() const override;
 
@@ -40,7 +40,7 @@ public:
     QString id() const override;
     QString text() const override;
     QString subtext() const override;
-    QStringList iconUrls() const override;
+    std::unique_ptr<albert::Icon> icon() const override;
     QString inputActionText() const override;
     std::vector<albert::Action> actions() const override;
 

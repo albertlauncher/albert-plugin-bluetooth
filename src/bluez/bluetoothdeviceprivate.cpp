@@ -68,7 +68,3 @@ std::optional<QString> BluetoothDevicePrivate::disconnectDevice()
 }
 
 uint32_t BluetoothDevicePrivate::classOfDevice() { return device_.deviceClass(); }
-
-QStringList BluetoothDevicePrivate::deviceIconUrls()
-{ return QStringList(u"xdg:"_s + device_.icon()) + BluetoothDevice::deviceIconUrls(); }
-

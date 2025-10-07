@@ -26,7 +26,6 @@ public:
 
     virtual QString address() = 0;
     virtual uint32_t classOfDevice() = 0;
-    virtual QStringList deviceIconUrls();
     virtual std::optional<QString> connectDevice() = 0; // async, triggers connectDeviceCallback
     virtual std::optional<QString> disconnectDevice() = 0; // async, triggers disconnectDeviceCallback
 
