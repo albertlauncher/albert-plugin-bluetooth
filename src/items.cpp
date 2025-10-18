@@ -12,14 +12,13 @@
 using enum BluetoothController::State;
 using enum BluetoothDevice::State;
 using namespace Qt::StringLiterals;
-using namespace albert::util;
 using namespace albert;
 using namespace std;
 
 
 static void showError(const optional<QString> &err){
     if (err)
-        albert::util::warning(*err);
+        albert::warning(*err);
 };
 
 // -------------------------------------------------------------------------------------------------

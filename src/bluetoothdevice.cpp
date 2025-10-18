@@ -6,7 +6,7 @@
 #include <albert/notification.h>
 using enum BluetoothDevice::State;
 using namespace Qt::StringLiterals;
-using namespace albert::util;
+using namespace albert;
 using namespace std;
 
 BluetoothDevice::BluetoothDevice(BluetoothController *controller,

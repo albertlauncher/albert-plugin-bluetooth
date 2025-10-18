@@ -10,7 +10,6 @@
 #include <albert/systemutil.h>
 ALBERT_LOGGING_CATEGORY("bluetooth")
 using namespace Qt::StringLiterals;
-using namespace albert::util;
 using namespace albert;
 using namespace std;
 #if  ! __has_feature(objc_arc)

@@ -50,6 +50,6 @@ private:
     QString id_;
     QString name_;
     State state_;
-    std::unique_ptr<albert::util::Notification> notification_;
+    std::unique_ptr<albert::Notification> notification_;
 
 };

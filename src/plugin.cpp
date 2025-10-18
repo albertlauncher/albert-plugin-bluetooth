@@ -8,7 +8,7 @@
 #include <albert/logging.h>
 #include <ranges>
 ALBERT_LOGGING_CATEGORY("bluetooth")
-using namespace albert::util;
+using namespace albert;
 using namespace std;
 
 QString Plugin::defaultTrigger() const { return QStringLiteral("bt "); }
