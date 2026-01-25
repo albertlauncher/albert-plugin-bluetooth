@@ -265,7 +265,10 @@ BluetoothDeviceItem::BluetoothDeviceItem(shared_ptr<BluetoothDevice> dev):
 QString BluetoothDeviceItem::id() const { return device->name(); }
 
 unique_ptr<albert::Icon> BluetoothDeviceItem::icon() const
-{ return Icon::composed(connectionStateIcon(device->state()), deviceClassIcon(device->classOfDevice())); }
+{
+    return Icon::composed(connectionStateIcon(device->state()),
+                          deviceClassIcon(device->classOfDevice()));
+}
 
 QString BluetoothDeviceItem::text() const { return device->name(); }
 
@@ -310,7 +313,8 @@ optional<QString> BluetoothDeviceItem::toggle() const
         else
         {
             QEventLoop loop;
-            connect(&device->controller(), &BluetoothController::stateChanged, &loop, &QEventLoop::quit);
+            connect(&device->controller(), &BluetoothController::stateChanged,
+                    &loop, &QEventLoop::quit);
             if (auto ret = device->controller().powerOn(); ret)
                 return ret;
             loop.exec();
