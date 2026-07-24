@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(bluetooth VERSION 4.6.2)
+project(bluetooth VERSION 4.7.0)
 
 find_package(Albert REQUIRED)
 
